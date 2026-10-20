@@ -1,0 +1,594 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Segwik Upsell Popup</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap">
+<style>
+:root{
+  --navy:#0b2440; --navy-deep:#071a30; --blue:#1a6fd4; --blue-dk:#0f4f9e;
+  --ink:#0f2742; --copy:#5a6b7e; --muted:#8696a8; --line:#e4e9ef; --tint:#eef5fd;
+  --tag:#b03535; --tag-bg:#fdeeee;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+  padding:24px;background:#fff;font-family:"Poppins",system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);}
+
+/* ════════════ CONTROLS (not part of the popup) ════════════ */
+.wf{display:flex;align-items:center;flex-wrap:wrap;gap:24px;width:100%;max-width:1160px;}
+/* a toggle that slides between the two choices — neither side is "off",
+   so the track stays the same colour and the live side is the dark label */
+.wf-opt{display:flex;align-items:center;gap:10px;color:var(--ink);font-size:13px;cursor:pointer;}
+.wf-sw{position:relative;flex-shrink:0;width:38px;height:21px;border-radius:999px;background:#ccd4dd;}
+.wf-sw::after{content:"";position:absolute;top:2.5px;left:2.5px;width:16px;height:16px;border-radius:50%;
+  background:var(--blue);transition:transform .18s ease;}
+#wf-mode{position:absolute;opacity:0;width:0;height:0;}
+#wf-mode:checked ~ .wf-sw::after{transform:translateX(17px);}
+.wf-side{color:var(--muted);}
+.wf-side.is-a{color:var(--ink);font-weight:500;}
+.wf-opt:has(#wf-mode:checked) .wf-side.is-a{color:var(--muted);font-weight:400;}
+.wf-opt:has(#wf-mode:checked) .wf-side.is-b{color:var(--ink);font-weight:500;}
+.wf-rule{width:1px;height:22px;background:#dde3ea;}
+.wf-chk{width:16px;height:16px;accent-color:var(--blue);cursor:pointer;}
+
+/* ════════════ FIELD TAGS — Basic account creation + "Show fields" ════════════
+   Every tag is drawn OUTSIDE the popup (and outside the drawer), so turning
+   them on moves nothing: no width, padding, stacking or wrapping changes
+   anywhere in the UI. --lead is the distance from that element's own right
+   edge out to the clear space beside the panel it sits in. */
+[data-field]::before{display:none;}
+
+/* the drawer is a scrolling box, so it can't let tags sit outside itself.
+   It widens by exactly the gutter instead — the content column stays 382px,
+   so not one card, line or wrap inside the drawer changes. */
+/* Each tagged element shrinks to hug its own content (fit-content never
+   rewraps text — a paragraph still resolves to the full column), so the tag
+   lands 10px past where the CONTENT ends, not out at the card edge.
+   Buttons and the right-aligned price keep their width so they don't shrink. */
+/* Every tag is a zero-width marker dropped right after the text it labels,
+   INSIDE the popup and INSIDE the drawer. Nothing is added to either one's
+   width, nothing reflows, and no gutter exists. Field keys are long and the
+   text they trail ends at different places, so a true column isn't possible
+   here — hence the short 6px leader, per the fallback. */
+.fx-t{display:none;}
+.fx{position:relative;display:inline-block;align-self:center;width:0;height:0;overflow:visible;vertical-align:baseline;}
+
+body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx .fx-t{
+  display:block;position:absolute;z-index:5;
+  top:-7px;left:14px;width:var(--fw,96px);
+  color:var(--tag);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:8px;font-weight:400;letter-spacing:-.1px;text-transform:none;line-height:9.5px;
+  white-space:normal;overflow-wrap:anywhere;pointer-events:auto;cursor:text;-webkit-user-select:text;user-select:text;opacity:.85;}
+/* the drawer heading can fill its whole line ("SEGWIK GROW — THE DESKTOP PLAN"),
+   leaving no room beside it — that one tag sits just above where it ends */
+body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .dr-title .fx .fx-t{
+  top:auto;bottom:16px;left:auto;right:0;width:max-content;text-align:right;}
+body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .dr-title .fx::after{
+  top:auto;bottom:7px;left:auto;right:1px;width:1px;height:6px;}
+/* red doesn't read on the blue button, so that tag drops just below it */
+body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .dr-btn .fx .fx-t{
+  top:25px;left:auto;right:50%;transform:translateX(50%);width:max-content;text-align:center;}
+body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .dr-btn .fx::after{
+  top:19px;left:auto;right:50%;width:1px;height:5px;}
+/* nothing sits to the right of the price, so its tag reads back to the left */
+body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-left .fx-t{
+  left:auto;right:14px;text-align:right;}
+body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-left::after{
+  left:auto;right:5px;}
+body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx::after{
+  content:"";display:block;position:absolute;z-index:4;top:-2px;left:5px;
+  width:6px;height:1px;background:var(--tag);opacity:.45;pointer-events:none;}
+
+/* ════════════ THE POPUP ════════════ */
+/* no overflow clipping anywhere, so the field tags can sit outside the panel
+   without the popup needing to change shape; corners are rounded per panel */
+.up{position:relative;display:grid;grid-template-columns:minmax(0,1fr) 430px;width:100%;max-width:1160px;
+  min-height:670px;border-radius:6px;background:#fff;box-shadow:0 30px 80px rgba(8,24,44,.28);}
+
+/* ── left: the illustration ── */
+.up-art{position:relative;display:flex;flex-direction:column;padding:28px 30px 34px;color:#fff;
+  border-radius:6px 0 0 6px;
+  background:radial-gradient(circle at 70% 25%,rgba(244,122,2,.1),transparent 40%),
+             linear-gradient(160deg,#0d2947,#071a30);}
+.up-logo{display:flex;align-items:center;gap:11px;}
+.up-logo-mark{display:flex;align-items:center;justify-content:center;width:40px;height:26px;border-radius:999px;
+  background:#fff;}
+.up-logo-mark span{width:13px;height:13px;border-radius:50%;background:var(--navy-deep);}
+.up-logo-word{font-size:21px;font-weight:600;letter-spacing:.06em;}
+.up-graph{flex:1;display:flex;align-items:center;justify-content:center;padding:10px 0;}
+.up-graph svg{width:100%;max-width:520px;height:auto;}
+.up-quote{margin-top:6px;text-align:center;font-size:17px;font-weight:600;line-height:1.5;}
+.up-ticks{display:flex;justify-content:center;gap:26px;margin-top:16px;}
+.up-tick{display:flex;align-items:center;gap:7px;color:rgba(255,255,255,.72);font-size:12.5px;}
+.up-tick i{color:#fff;font-size:11px;}
+
+/* ── right: the plans ── */
+.up-side{position:relative;display:flex;flex-direction:column;padding:26px 26px 22px;background:#fff;
+  border-radius:0 6px 6px 0;}
+.up-close{position:absolute;top:16px;right:18px;width:30px;height:30px;border:0;background:transparent;
+  color:#9aa7b5;font-size:18px;line-height:1;cursor:pointer;}
+.up-close:hover{color:var(--ink);}
+.up-top{display:flex;align-items:flex-start;gap:16px;padding-right:40px;}
+.up-cur{color:var(--blue);font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;line-height:1.45;}
+.up-h{margin-top:20px;font-size:25px;font-weight:600;letter-spacing:-.02em;line-height:1.2;}
+.up-sub{margin-top:9px;color:var(--copy);font-size:13.5px;line-height:1.6;}
+
+.up-plans{display:grid;gap:11px;margin-top:20px;}
+.up-plan{padding:15px 17px 14px;border:1px solid var(--line);border-radius:9px;background:#fff;}
+.up-plan.is-cur{border-color:#b9d6f5;background:var(--tint);}
+.up-plan-top{display:flex;align-items:center;gap:9px;flex-wrap:wrap;}
+.up-num{color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.04em;}
+.up-plan-name{font-size:14.5px;font-weight:600;}
+.up-badge{padding:3px 8px;border-radius:4px;background:var(--blue);color:#fff;font-size:9px;font-weight:600;
+  letter-spacing:.07em;text-transform:uppercase;}
+.up-plan-desc{margin-top:6px;color:var(--copy);font-size:12.5px;line-height:1.55;}
+.up-cta{display:flex;align-items:center;justify-content:flex-start;gap:8px;width:100%;margin-top:11px;
+  border:0;padding:0;background:transparent;color:var(--blue);font:inherit;font-size:13px;font-weight:600;
+  cursor:pointer;text-align:left;}
+.up-cta:hover{color:var(--blue-dk);text-decoration:underline;}
+.up-cta i{font-size:12px;}
+
+.up-note{display:flex;align-items:flex-start;gap:11px;margin-top:11px;padding:14px 16px;
+  border:1px solid var(--line);border-radius:9px;color:var(--copy);font-size:12.5px;line-height:1.55;}
+.up-note i{margin-top:2px;color:var(--muted);font-size:13px;}
+.up-note b{color:var(--ink);font-weight:600;}
+
+.up-foot{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-top:22px;padding-top:4px;}
+.up-foot-left{display:flex;gap:22px;}
+.up-link{border:0;padding:0;background:transparent;color:var(--copy);font:inherit;font-size:12.5px;cursor:pointer;}
+.up-link:hover{color:var(--ink);}
+.up-tour{display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:transparent;
+  color:var(--copy);font:inherit;font-size:12px;cursor:pointer;}
+.up-tour i{font-size:15px;color:var(--muted);}
+
+/* ════════════ THE DRAWER ════════════ */
+.dr-back{position:fixed;inset:0;z-index:40;background:rgba(10,26,46,.5);opacity:0;visibility:hidden;
+  transition:opacity .25s ease,visibility .25s ease;}
+.dr-back.on{opacity:1;visibility:visible;}
+.dr{position:fixed;top:0;right:0;bottom:0;z-index:41;width:min(430px,100%);display:flex;flex-direction:column;
+  background:#fff;box-shadow:-18px 0 50px rgba(8,24,44,.24);transform:translateX(100%);
+  transition:transform .3s cubic-bezier(.22,1,.36,1);}
+.dr.on{transform:none;}
+
+.dr-scroll{flex:1;overflow-y:auto;padding:22px 24px 26px;}
+.dr-icon{display:flex;align-items:center;justify-content:center;width:34px;height:34px;margin-bottom:18px;
+  border-radius:8px;background:var(--tint);color:var(--blue);font-size:14px;}
+.dr-close{position:absolute;top:18px;right:20px;z-index:2;width:30px;height:30px;border:0;background:transparent;
+  color:#9aa7b5;font-size:18px;cursor:pointer;}
+.dr-close:hover{color:var(--ink);}
+.dr-title{font-size:21px;font-weight:600;line-height:1.25;letter-spacing:-.01em;text-transform:uppercase;}
+.dr-summary{margin-top:10px;color:var(--copy);font-size:12.5px;line-height:1.65;}
+
+.dr-feats{margin-top:18px;}
+.dr-feat{padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:#fff;}
+.dr-feat + .dr-feat{margin-top:8px;}
+.dr-feat-name{display:flex;align-items:flex-start;gap:10px;font-size:13px;font-weight:600;line-height:1.35;}
+.dr-feat-name i{flex-shrink:0;width:16px;margin-top:2px;color:var(--blue);font-size:12.5px;text-align:center;}
+.dr-feat-desc{margin-top:4px;padding-left:26px;color:var(--copy);font-size:12px;line-height:1.55;}
+
+/* the upgrade box at the bottom of the drawer */
+.dr-box{margin-top:14px;padding:16px 16px 15px;border:1px solid #b9d6f5;border-radius:9px;background:var(--tint);}
+.dr-box-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;}
+.dr-box-id{flex:1;min-width:0;}
+.dr-box-name{font-size:14px;font-weight:600;line-height:1.3;}
+.dr-box-sub{margin-top:3px;color:var(--copy);font-size:11.5px;line-height:1.5;}
+.dr-box-price{flex-shrink:0;width:76px;text-align:right;}
+.dr-price{font-size:22px;font-weight:600;line-height:1.1;}
+.dr-per{display:block;margin-top:1px;color:var(--muted);font-size:10.5px;}
+.dr-bullets{list-style:none;margin-top:13px;}
+.dr-bullets li{display:flex;align-items:flex-start;gap:9px;color:var(--ink);font-size:12px;line-height:1.5;}
+.dr-bullets li + li{margin-top:7px;}
+.dr-bullets i{flex-shrink:0;margin-top:3px;color:var(--blue);font-size:11px;}
+.dr-btn{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:44px;margin-top:15px;
+  border:0;border-radius:7px;background:var(--blue);color:#fff;font:inherit;font-size:13.5px;font-weight:600;
+  cursor:pointer;}
+.dr-btn:hover{background:var(--blue-dk);}
+
+.dr-help{display:flex;align-items:flex-start;gap:10px;margin-top:11px;padding:13px 15px;
+  border:1px solid var(--line);border-radius:9px;color:var(--copy);font-size:11.5px;line-height:1.55;}
+.dr-help i{margin-top:2px;color:var(--muted);font-size:12px;}
+.dr-help b{color:var(--ink);font-weight:600;}
+
+@media(max-width:980px){
+  body{padding:16px;align-items:stretch;}
+  .wf{gap:14px;}
+  .up{grid-template-columns:1fr;border-radius:4px;}
+  .up-art{padding:22px 20px 26px;}
+  .up-graph svg{max-width:360px;}
+  .up-side{padding:22px 20px 20px;}
+  .up-h{font-size:22px;}
+  .dr{width:100%;}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ controls ══ -->
+<div class="wf">
+  <label class="wf-opt">
+    <span class="wf-side is-a">Basic account creation</span>
+    <input type="checkbox" id="wf-mode">
+    <span class="wf-sw"></span>
+    <span class="wf-side is-b">Account creation via chamber invitation</span>
+  </label>
+
+  <span class="wf-rule"></span>
+
+  <label class="wf-opt">
+    <input type="checkbox" class="wf-chk">
+    <span>Show fields</span>
+  </label>
+</div>
+
+<!-- ══ the popup ══ -->
+<div class="up" id="up">
+
+  <div class="up-art">
+    <div class="up-logo">
+      <span class="up-logo-mark"><span></span></span>
+      <span class="up-logo-word">SEGWIK</span>
+    </div>
+
+    <div class="up-graph">
+      <svg viewBox="0 0 560 420" aria-label="Your network">
+        <g stroke="#3d6c9e" stroke-opacity=".55" stroke-width="1.2" fill="none">
+          <path d="M150 112 L285 215"/><path d="M285 215 L395 105"/><path d="M395 105 L470 140"/>
+          <path d="M285 215 L112 232"/><path d="M285 215 L447 196"/><path d="M285 215 L163 318"/>
+          <path d="M285 215 L300 318"/><path d="M285 215 L410 290"/><path d="M163 318 L228 355"/>
+          <path d="M300 318 L228 355"/>
+        </g>
+        <g stroke="#f47a02" stroke-opacity=".75" stroke-width="1.3" fill="none">
+          <path d="M395 105 L470 140"/><path d="M285 215 L447 196"/><path d="M285 215 L410 290"/>
+          <path d="M300 318 L228 355"/>
+        </g>
+        <g fill="#f47a02">
+          <circle cx="321" cy="162" r="3"/><circle cx="430" cy="121" r="2.5"/>
+          <circle cx="368" cy="205" r="3"/><circle cx="196" cy="340" r="2.5"/><circle cx="347" cy="255" r="3"/>
+        </g>
+        <g>
+          <circle cx="150" cy="112" r="24" fill="#123a63" stroke="#4a7cb0" stroke-width="1.4"/>
+          <circle cx="150" cy="104" r="8" fill="#e8b48c"/><path d="M135 126a15 14 0 0130 0z" fill="#2f9e5f"/>
+          <circle cx="395" cy="105" r="24" fill="#123a63" stroke="#4a7cb0" stroke-width="1.4"/>
+          <circle cx="395" cy="97" r="8" fill="#8a5a3c"/><path d="M380 119a15 14 0 0130 0z" fill="#2f7fd4"/>
+          <circle cx="470" cy="140" r="16" fill="#123a63" stroke="#4a7cb0" stroke-width="1.3"/>
+          <circle cx="470" cy="135" r="5.5" fill="#e8b48c"/><path d="M460 150a10 9 0 0120 0z" fill="#2f7fd4"/>
+          <circle cx="447" cy="196" r="22" fill="#123a63" stroke="#4a7cb0" stroke-width="1.4"/>
+          <circle cx="447" cy="189" r="7.5" fill="#8a5a3c"/><path d="M433 209a14 13 0 0128 0z" fill="#f08b2a"/>
+          <circle cx="112" cy="232" r="21" fill="#123a63" stroke="#4a7cb0" stroke-width="1.4"/>
+          <circle cx="112" cy="225" r="7" fill="#e8b48c"/><path d="M99 244a13 12 0 0126 0z" fill="#2f9e5f"/>
+          <circle cx="163" cy="318" r="22" fill="#123a63" stroke="#4a7cb0" stroke-width="1.4"/>
+          <circle cx="163" cy="311" r="7.5" fill="#8a5a3c"/><path d="M149 331a14 13 0 0128 0z" fill="#2f9e5f"/>
+          <circle cx="300" cy="318" r="23" fill="#123a63" stroke="#4a7cb0" stroke-width="1.4"/>
+          <circle cx="300" cy="310" r="8" fill="#e8b48c"/><path d="M286 332a14 13 0 0128 0z" fill="#2f7fd4"/>
+          <circle cx="228" cy="355" r="16" fill="#123a63" stroke="#4a7cb0" stroke-width="1.3"/>
+          <circle cx="228" cy="350" r="5.5" fill="#8a5a3c"/><path d="M218 365a10 9 0 0120 0z" fill="#f08b2a"/>
+          <circle cx="410" cy="290" r="22" fill="#123a63" stroke="#4a7cb0" stroke-width="1.4"/>
+          <circle cx="410" cy="283" r="7.5" fill="#e8b48c"/><path d="M396 303a14 13 0 0128 0z" fill="#f08b2a"/>
+        </g>
+        <g>
+          <circle cx="230" cy="178" r="15" fill="none" stroke="#f47a02" stroke-width="1.3"/>
+          <text x="230" y="183" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#f47a02">&#9993;</text>
+          <circle cx="176" cy="232" r="14" fill="none" stroke="#f47a02" stroke-width="1.3"/>
+          <text x="176" y="237" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#f47a02">&#128197;</text>
+          <circle cx="258" cy="272" r="14" fill="none" stroke="#f47a02" stroke-width="1.3"/>
+          <text x="258" y="277" text-anchor="middle" font-family="sans-serif" font-size="12" fill="#f47a02">&#10003;</text>
+        </g>
+        <circle cx="285" cy="215" r="42" fill="#f08b2a" stroke="#f9c98b" stroke-width="2.5"/>
+        <circle cx="285" cy="201" r="14" fill="#f7d9bd"/>
+        <path d="M259 248a26 24 0 0152 0z" fill="#f7d9bd"/>
+        <rect x="263" y="262" width="44" height="18" rx="5" fill="#0b2440"/>
+        <text x="285" y="275" text-anchor="middle" font-family="Poppins,sans-serif" font-size="11" fill="#fff">You</text>
+      </svg>
+    </div>
+
+    <p class="up-quote">&ldquo;Nice to meet you, Pete. Let&rsquo;s go grow that network.&rdquo;</p>
+    <div class="up-ticks">
+      <span class="up-tick"><i class="fa-solid fa-check"></i> Invite-only circle</span>
+      <span class="up-tick"><i class="fa-solid fa-check"></i> Start plan &mdash; free for life</span>
+    </div>
+  </div>
+
+  <div class="up-side">
+    <button class="up-close" type="button" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+
+    <div class="up-top">
+      <div class="up-cur">Current plan: Start</div>
+    </div>
+
+    <h2 class="up-h">Two ways to go from here</h2>
+    <p class="up-sub">You&rsquo;re on the free-for-life Starter plan. It lives on your phone &mdash; desktop Segwik is a paid upgrade.</p>
+
+    <div class="up-plans">
+
+      <div class="up-plan is-cur">
+        <div class="up-plan-top">
+          <span class="up-num">01</span>
+          <span class="up-plan-name">Segwik Start</span>
+          <span class="up-badge">Free for life</span><span class="fx" data-field="package_title"><span class="fx-t">package_title</span></span>
+        </div>
+        <p class="up-plan-desc">The Segwik Networking Core &mdash; every introduction, conversation and promise in one place.<span class="fx" data-field="popup_intro"><span class="fx-t">popup_intro</span></span></p>
+        <button class="up-cta" type="button" data-plan="start">
+          <i class="fa-solid fa-arrow-down-to-line"></i> Stay on Start &nbsp;&rarr;<span class="fx" data-field="popup_cta"><span class="fx-t">popup_cta</span></span>
+        </button>
+      </div>
+
+      <div class="up-plan">
+        <div class="up-plan-top">
+          <span class="up-num">02</span>
+          <span class="up-plan-name">Segwik Grow</span><span class="fx" data-field="package_title"><span class="fx-t">package_title</span></span>
+        </div>
+        <p class="up-plan-desc">Unlocks Segwik on desktop &mdash; the full command center for people who run their network like a business.<span class="fx" style="--fw:56px" data-field="popup_intro"><span class="fx-t">popup_intro</span></span></p>
+        <button class="up-cta" type="button" data-plan="grow">
+          <i class="fa-solid fa-paper-plane"></i> Upgrade to Grow &nbsp;&rarr;<span class="fx" data-field="popup_cta"><span class="fx-t">popup_cta</span></span>
+        </button>
+      </div>
+
+      <div class="up-plan">
+        <div class="up-plan-top">
+          <span class="up-num">03</span>
+          <span class="up-plan-name">Segwik Pro</span><span class="fx" data-field="package_title"><span class="fx-t">package_title</span></span>
+        </div>
+        <p class="up-plan-desc">Unlocks the tools needed to fully customize and scale your system.<span class="fx" data-field="popup_intro"><span class="fx-t">popup_intro</span></span></p>
+        <button class="up-cta" type="button" data-plan="pro">
+          <i class="fa-solid fa-paper-plane"></i> Upgrade to Pro &nbsp;&rarr;<span class="fx" data-field="popup_cta"><span class="fx-t">popup_cta</span></span>
+        </button>
+      </div>
+
+      <div class="up-note">
+        <i class="fa-regular fa-calendar"></i>
+        <span><b>Not sure yet?</b> Book 20 minutes with Pete in the Success Center.</span>
+      </div>
+    </div>
+
+    <div class="up-foot">
+      <div class="up-foot-left">
+        <button class="up-link" type="button">Maybe later</button>
+        <button class="up-link" type="button">Do not show again</button>
+      </div>
+      <button class="up-tour" type="button">
+        <i class="fa-solid fa-desktop"></i>
+        <span>Quick tour</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ the drawer ══ -->
+<div class="dr-back" id="drBack"></div>
+<aside class="dr" id="dr" role="dialog" aria-label="Plan details">
+  <button class="dr-close" type="button" id="drClose" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+
+  <div class="dr-scroll" id="drScroll">
+    <span class="dr-icon"><i class="fa-solid fa-paper-plane"></i></span>
+
+    <h3 class="dr-title" id="drTitle"></h3>
+    <p class="dr-summary" id="drSummary"></p>
+
+    <div class="dr-feats" id="drFeats"></div>
+
+    <div class="dr-box">
+      <div class="dr-box-top">
+        <div class="dr-box-id">
+          <div class="dr-box-name" id="drBoxName"></div>
+          <div class="dr-box-sub" id="drBoxSub"></div>
+        </div>
+        <div class="dr-box-price">
+          <span class="fx fx-left" data-field="package_price"><span class="fx-t">package_price</span></span><span class="dr-price" id="drPrice"></span>
+          <span class="dr-per">per month</span>
+        </div>
+      </div>
+
+      <ul class="dr-bullets" id="drBullets"></ul>
+
+      <button class="dr-btn" type="button" id="drBtn"></button>
+    </div>
+
+    <div class="dr-help">
+      <i class="fa-regular fa-calendar"></i>
+      <span><b>Want to see it first?</b> Book 20 minutes with Pete in the Success Center.</span>
+    </div>
+  </div>
+</aside>
+
+<script>
+(function () {
+  'use strict';
+
+  /* a zero-width marker that parks the field tag right after the text */
+  function mark(el, field, w) {
+    var m = document.createElement('span');
+    m.className = 'fx';
+    m.setAttribute('data-field', field);
+    if (w) { m.style.setProperty('--fw', w + 'px'); }
+    var t = document.createElement('span');
+    t.className = 'fx-t';
+    t.textContent = field;          /* real text, so it can be selected and copied */
+    m.appendChild(t);
+    el.appendChild(m);
+    return el;
+  }
+
+  function set(id, text) {
+    var el = document.getElementById(id);
+    el.textContent = text;
+    return el;
+  }
+
+  /* ── the upgrade box at the bottom of a drawer ── */
+  var BOX = {
+    grow: {
+      name: 'Segwik Grow',
+      sub: 'Unlocks Segwik on desktop — the full command center for people who run their network like a business.',
+      price: '$29',
+      cta: 'Upgrade to Grow',
+      bullets: [
+        'Everything in Segwik Start',
+        'Desktop access, editable personas, contact types and custom fields',
+        'Email campaigns, AI content generation, meeting recording and summaries',
+        'Multi-user accounts, QuickBooks, LinkedIn and Zapier integrations'
+      ]
+    },
+    pro: {
+      name: 'Segwik Pro',
+      sub: 'Unlocks the tools needed to fully customize and scale your system.',
+      price: '$49',
+      cta: 'Upgrade to Pro',
+      bullets: [
+        'Everything in Segwik Grow',
+        'Client portal, document storage and custom forms',
+        'Text blasting, calling and advanced SMS',
+        'Role-based access controls and industry add-on modules'
+      ]
+    }
+  };
+
+  var PLANS = {
+    start: {
+      title: 'Everything in Segwik Start',
+      summary: 'The full Segwik Networking Core — digital business card, info swap, automated journeys, appointment booker and relationship reminders, with no contact limits.',
+      box: 'grow',
+      features: [
+        ['fa-solid fa-id-card', 'Segwik Profile', 'Your profile, free forever. No credit card required.'],
+        ['fa-solid fa-mobile-screen', 'Mobile App', 'Segwik in your pocket, wherever you meet people.'],
+        ['fa-solid fa-address-book', 'Contact Manager', 'Unlimited contacts, with a fixed set of personas and contact types.'],
+        ['fa-solid fa-right-left', 'Easy Info Swap', 'Exchange contact information the moment you meet someone.'],
+        ['fa-regular fa-calendar-check', 'Online Booking', 'Let people book time with you without the back and forth.'],
+        ['fa-solid fa-list-check', 'Meeting Types', 'Set up the kinds of meetings you actually run.'],
+        ['fa-solid fa-user-check', 'Check-In Tracking', 'Keep a record of who showed up and what came of it.'],
+        ['fa-solid fa-sitemap', 'Multi-Step Journeys', 'Automated follow-up, up to 100 active journeys.'],
+        ['fa-solid fa-camera', 'AI Business Card Scanner', 'Turn a paper card into a contact in seconds.'],
+        ['fa-solid fa-file-import', 'Mobile Contact Importing', 'Bring the contacts already on your phone into Segwik.'],
+        ['fa-solid fa-envelope', 'Email Messaging', 'Reach a contact by email without leaving the relationship.'],
+        ['fa-solid fa-comment-sms', 'SMS Messaging', 'Local messaging, one conversation at a time.'],
+        ['fa-solid fa-inbox', 'Segwik Inbox', 'One unified thread per person.'],
+        ['fa-solid fa-calendar-days', 'Google / Outlook Calendar Sync', 'Your calendar and your relationships in step.'],
+        ['fa-solid fa-bell', 'Relationship Reminders', 'Stay aware of important moments and reasons to reconnect.'],
+        ['fa-solid fa-gauge-high', 'Automation Fuel', 'A small starting balance to try things out.']
+      ]
+    },
+
+    grow: {
+      title: 'Segwik Grow — the desktop plan',
+      summary: 'Grow is the package that unlocks Segwik on desktop — the full command center for people who run their network like a business.',
+      box: 'pro',
+      features: [
+        ['fa-solid fa-desktop', 'Desktop Access', 'The full command center, not just the mobile app.'],
+        ['fa-solid fa-users-gear', 'Personas & Contact Types', 'Editable, rather than the fixed set on your profile.'],
+        ['fa-solid fa-table-columns', 'Custom Fields', 'Track what matters to your business, in your own words.'],
+        ['fa-solid fa-file-csv', 'Desktop CSV Importing', 'Bring an existing list in without typing it twice.'],
+        ['fa-solid fa-envelope-open-text', 'Email Campaigns', 'Send to a whole audience without losing the relationship.'],
+        ['fa-solid fa-wand-magic-sparkles', 'AI Content Generation', 'Written for you, ready to edit.'],
+        ['fa-solid fa-microphone-lines', 'Meeting Recording & Summaries', 'Meeting recap filed to the contact record.'],
+        ['fa-solid fa-user-group', 'Multi-User Accounts', 'Bring your team into the same relationships.'],
+        ['fa-solid fa-file-invoice-dollar', 'QuickBooks', 'Connect Segwik to the books you already keep.'],
+        ['fa-brands fa-linkedin', 'LinkedIn Messaging Sync', 'Keep LinkedIn conversations with the contact they belong to.'],
+        ['fa-solid fa-plug', 'Zapier / API Connector', 'Connect Segwik to the rest of your stack.'],
+        ['fa-solid fa-gauge-high', 'Automation Fuel', 'Enough for steady outreach and follow-up.']
+      ]
+    },
+
+    pro: {
+      title: 'Everything in Segwik Grow',
+      summary: 'Pro unlocks the tools needed to fully customize and scale your system.',
+      box: 'pro',
+      features: [
+        ['fa-solid fa-sitemap', 'Advanced Automations & Journeys', 'Build and customize multi-step follow-up systems, nurture sequences, and behavior-based workflows.'],
+        ['fa-solid fa-tower-broadcast', 'Expanded Communication Capabilities', 'Use email, SMS, and call workflows together as part of a unified follow-up system.'],
+        ['fa-solid fa-sliders', 'Deeper Customization Across Your Setup', 'Configure personas, segmentation, contact types, and business-specific structures.'],
+        ['fa-solid fa-calendar-star', 'Event & Relationship Workflows', 'Support event-driven follow-up, attendee journeys, and ongoing relationship management.'],
+        ['fa-solid fa-diagram-project', 'System-Level Configuration', 'Connect multiple parts of your business — from lead capture to booking to follow-up to delivery.'],
+        ['fa-solid fa-cubes', 'Access to Advanced Modules & Features', 'Unlock additional tools and modules used for portals, workflows, and expanded system functionality.'],
+        ['fa-solid fa-chart-line', 'Scalability for Growing Businesses', 'Designed to support more complex operations, multiple workflows, and long-term growth.'],
+        ['fa-solid fa-comment-sms', 'Text Blasting', 'Reach a whole audience by text, not one thread at a time.'],
+        ['fa-solid fa-phone', 'Calling', 'Place and log calls without leaving the relationship.'],
+        ['fa-solid fa-folder-open', 'Document Storage', 'Keep documents attached to the people and projects they belong to.'],
+        ['fa-solid fa-list-check', 'Custom Forms', 'Collect what you need, straight onto the record.'],
+        ['fa-solid fa-user-shield', 'Role-Based Access', 'Decide who on the team sees and does what.'],
+        ['fa-solid fa-gauge-high', 'Automation Fuel', 'Built for teams and active campaigns.']
+      ]
+    }
+  };
+
+  var dr = document.getElementById('dr');
+  var back = document.getElementById('drBack');
+  var feats = document.getElementById('drFeats');
+  var bullets = document.getElementById('drBullets');
+
+  function open(key) {
+    var p = PLANS[key];
+    if (!p) { return; }
+    var box = BOX[p.box];
+
+    var elTitle = document.getElementById('drTitle');
+    elTitle.textContent = p.title;
+    mark(elTitle, 'popup_drawer_heading', 72);
+
+    var elSum = document.getElementById('drSummary');
+    elSum.textContent = p.summary;
+    mark(elSum, 'popup_drawer_summary', 96);
+
+    while (feats.firstChild) { feats.removeChild(feats.firstChild); }
+    p.features.forEach(function (f) {
+      var card = document.createElement('div');
+      card.className = 'dr-feat';
+
+      var name = document.createElement('div');
+      name.className = 'dr-feat-name';
+      var ico = document.createElement('i');
+      ico.className = f[0];
+      ico.setAttribute('aria-hidden', 'true');
+      name.appendChild(ico);
+      name.appendChild(document.createTextNode(f[1]));
+      card.appendChild(name);
+
+      var desc = document.createElement('p');
+      desc.className = 'dr-feat-desc';
+      desc.textContent = f[2];
+      card.appendChild(desc);
+
+      if (!feats.childNodes.length) { mark(name, 'popup_drawer_features', 112); }
+      feats.appendChild(card);
+    });
+
+    mark(set('drBoxName', box.name), 'package_title', 96);
+    mark(set('drBoxSub', box.sub), 'popup_intro', 96);
+    document.getElementById('drPrice').textContent = box.price;
+    var elBtn = document.getElementById('drBtn');
+    elBtn.innerHTML = '';
+    elBtn.appendChild(document.createTextNode(box.cta + '  →'));
+    mark(elBtn, 'popup_cta', 96);
+
+    while (bullets.firstChild) { bullets.removeChild(bullets.firstChild); }
+    box.bullets.forEach(function (t) {
+      var li = document.createElement('li');
+      var ico = document.createElement('i');
+      ico.className = 'fa-solid fa-check';
+      ico.setAttribute('aria-hidden', 'true');
+      li.appendChild(ico);
+      li.appendChild(document.createTextNode(t));
+      if (!bullets.childNodes.length) { mark(li, 'popup_bullets', 96); }
+      bullets.appendChild(li);
+    });
+
+    document.getElementById('drScroll').scrollTop = 0;
+    dr.classList.add('on');
+    back.classList.add('on');
+  }
+
+  function close() {
+    dr.classList.remove('on');
+    back.classList.remove('on');
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-plan]'), function (btn) {
+    btn.addEventListener('click', function () { open(btn.getAttribute('data-plan')); });
+  });
+  document.getElementById('drClose').addEventListener('click', close);
+  back.addEventListener('click', close);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { close(); } });
+})();
+</script>
+</body>
+</html>
