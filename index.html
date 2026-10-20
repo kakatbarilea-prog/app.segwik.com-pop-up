@@ -32,6 +32,14 @@ body{min-height:100vh;display:flex;flex-direction:column;align-items:center;just
 .wf-opt:has(#wf-mode:checked) .wf-side.is-b{color:var(--ink);font-weight:500;}
 .wf-rule{width:1px;height:22px;background:#dde3ea;}
 .wf-chk{width:16px;height:16px;accent-color:var(--blue);cursor:pointer;}
+/* the gate on this mode — shown under its own label, outside the popup */
+.wf-side{position:relative;}
+.wf-gate{display:none;position:absolute;top:100%;left:0;margin-top:2px;white-space:nowrap;
+  padding:1px 5px;border:1px solid #f1cfcf;border-radius:3px;background:var(--tag-bg);
+  color:var(--tag);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  font-size:10px;font-weight:500;line-height:13px;letter-spacing:-.1px;
+  cursor:text;-webkit-user-select:text;user-select:text;}
+body:has(.wf-chk:checked):has(#wf-mode:checked) .wf-gate{display:block;}
 
 /* ════════════ FIELD TAGS — Basic account creation + "Show fields" ════════════
    Every tag is drawn OUTSIDE the popup (and outside the drawer), so turning
@@ -55,34 +63,34 @@ body{min-height:100vh;display:flex;flex-direction:column;align-items:center;just
 .fx-t{display:none;}
 .fx{position:relative;display:inline-block;align-self:center;width:0;height:0;overflow:visible;vertical-align:baseline;}
 
-body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx .fx-t{
+body:has(.wf-chk:checked) .fx .fx-t{
   display:block;position:absolute;z-index:5;
-  top:-9px;left:13px;width:max-content;max-width:var(--fw,180px);
+  top:-9px;left:13px;width:max-content;max-width:none;
   padding:1px 5px;border:1px solid #f1cfcf;border-radius:3px;background:var(--tag-bg);
   color:var(--tag);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   font-size:10px;font-weight:500;letter-spacing:-.1px;text-transform:none;line-height:13px;
-  white-space:normal;overflow-wrap:anywhere;pointer-events:auto;cursor:text;-webkit-user-select:text;user-select:text;opacity:.85;}
+  white-space:nowrap;pointer-events:auto;cursor:text;-webkit-user-select:text;user-select:text;opacity:.85;}
 /* the drawer heading can fill its whole line ("SEGWIK GROW — THE DESKTOP PLAN"),
    leaving no room beside it — that one tag sits just above where it ends */
-body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .dr-title .fx .fx-t{
+body:has(.wf-chk:checked) .dr-title .fx .fx-t{
   top:auto;bottom:19px;left:auto;right:0;width:max-content;text-align:right;}
-body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .dr-title .fx::after{
+body:has(.wf-chk:checked) .dr-title .fx::after{
   top:auto;bottom:9px;left:auto;right:1px;width:1px;height:6px;}
 /* red doesn't read on the blue button, so that tag drops just below it */
-body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .dr-btn .fx .fx-t{
+body:has(.wf-chk:checked) .dr-btn .fx .fx-t{
   top:25px;left:auto;right:50%;transform:translateX(50%);width:max-content;text-align:center;}
-body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .dr-btn .fx::after{
+body:has(.wf-chk:checked) .dr-btn .fx::after{
   top:19px;left:auto;right:50%;width:1px;height:5px;}
-body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx::after{
+body:has(.wf-chk:checked) .fx::after{
   content:"";display:block;position:absolute;z-index:4;top:-2px;left:5px;
   width:6px;height:1px;background:var(--tag);opacity:.45;pointer-events:none;}
 /* Four of the drawer's tags straddle its left edge — half outside, half in.
    They can't live in .dr-scroll (a scrolling box clips both axes), so they are
    drawn in their own layer and kept in step with their rows on scroll. */
 .dr-tags{position:absolute;inset:0;z-index:6;pointer-events:none;display:none;}
-body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .dr.on .dr-tags{display:block;}
-body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-edge .fx-t{display:none;}
-body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-edge::after{display:none;}
+body:has(.wf-chk:checked) .dr.on .dr-tags{display:block;}
+body:has(.wf-chk:checked) .fx-edge .fx-t{display:none;}
+body:has(.wf-chk:checked) .fx-edge::after{display:none;}
 .dr-edge-tag{position:absolute;left:21px;transform:translateX(-100%);
   padding:1px 5px;border:1px solid #f1cfcf;border-radius:3px;background:var(--tag-bg);
   color:var(--tag);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
@@ -90,20 +98,21 @@ body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-edge::after{display:no
   pointer-events:auto;cursor:text;-webkit-user-select:text;user-select:text;}
 /* how the popup knows which plan they are on — the same call the /upgrade
    page makes. Sits in the empty space beside the current-plan label. */
-body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-note .fx-t{
-  top:-9px;left:16px;width:max-content;max-width:214px;line-height:1.45;text-transform:none;
-  letter-spacing:0;}
-body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-note::after{top:-3px;}
+body:has(.wf-chk:checked) .fx-note .fx-t{
+  top:-9px;left:16px;width:max-content;max-width:none;white-space:nowrap;
+  text-transform:none;letter-spacing:0;}
+body:has(.wf-chk:checked) .fx-note::after{top:-3px;}
 /* the booker url gets a line of its own along the bottom of its card */
-body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-url{
+body:has(.wf-chk:checked) .fx-url{
   position:absolute;left:14px;right:14px;bottom:6px;width:auto;height:auto;}
-body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-url .fx-t{
-  position:static;width:auto;max-width:none;line-height:1.5;}
-body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-url::after{display:none;}
+body:has(.wf-chk:checked) .fx-url .fx-t{
+  position:static;width:auto;max-width:none;line-height:1.5;
+  white-space:normal;overflow-wrap:anywhere;}
+body:has(.wf-chk:checked) .fx-url::after{display:none;}
 /* the price has nothing to its right, so its tag sits under "per month" */
-body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-under .fx-t{
+body:has(.wf-chk:checked) .fx-under .fx-t{
   top:11px;left:auto;right:0;width:max-content;text-align:right;}
-body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-under::after{display:none;}
+body:has(.wf-chk:checked) .fx-under::after{display:none;}
 
 /* ════════════ THE POPUP ════════════ */
 /* no overflow clipping anywhere, so the field tags can sit outside the panel
@@ -168,6 +177,37 @@ body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-under::after{display:n
   color:var(--copy);font:inherit;font-size:12px;cursor:pointer;}
 .up-tour i{font-size:15px;color:var(--muted);}
 
+
+/* ════════════ CHAMBER-INVITE MODE ════════════ */
+/* the chamber panel is trimmed to the same height as basic — it never scrolls */
+.up-chamber{display:none;}
+body:has(#wf-mode:checked) .up-basic{display:none;}
+body:has(#wf-mode:checked) .up-chamber{display:block;}
+body:has(#wf-mode:checked) .up-plans{gap:8px;margin-top:14px;}
+body:has(#wf-mode:checked) .up-plan{padding:12px 15px 11px;}
+body:has(#wf-mode:checked) .up-h{margin-top:16px;}
+body:has(#wf-mode:checked) .up-sub{margin-top:7px;}
+body:has(#wf-mode:checked) .up-cta{margin-top:9px;}
+
+.up-band{margin-top:14px;padding:10px 13px;border:1px solid var(--line);border-radius:9px;background:#fafbfc;}
+.up-band-q{font-size:12px;font-weight:600;color:var(--ink);}
+.up-band-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;}
+.up-band-pills button{padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:#fff;
+  color:var(--copy);font:inherit;font-size:11.5px;cursor:pointer;}
+.up-band-pills button.on{border-color:var(--blue);background:var(--blue);color:#fff;font-weight:600;}
+.up-band-note{margin-top:8px;color:var(--muted);font-size:11px;line-height:1.5;}
+.up-note-plain{padding-bottom:14px;}
+
+.up-plan-price{margin-top:7px;font-size:15px;font-weight:600;color:var(--ink);white-space:nowrap;}
+.up-plan-price span{color:var(--muted);font-size:11px;font-weight:400;}
+.up-plan-band{margin-top:3px;color:var(--ink);font-size:12px;font-weight:500;}
+.up-plan-for{margin-top:4px;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;}
+
+
+
+/* that note must not wrap, so the popup steps left to make room for it */
+body:has(.wf-chk:checked) .up{transform:translateX(-44px);}
+
 /* ════════════ THE DRAWER ════════════ */
 .dr-back{position:fixed;inset:0;z-index:40;background:rgba(10,26,46,.5);opacity:0;visibility:hidden;
   transition:opacity .25s ease,visibility .25s ease;}
@@ -215,6 +255,7 @@ body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-under::after{display:n
   border:1px solid var(--line);border-radius:9px;color:var(--copy);font-size:11.5px;line-height:1.55;}
 .dr-help i{margin-top:2px;color:var(--muted);font-size:12px;}
 .dr-help b{color:var(--ink);font-weight:600;}
+.dr-setup-price{color:var(--blue);white-space:nowrap;}
 
 @media(max-width:980px){
   body{padding:16px;align-items:stretch;}
@@ -236,7 +277,7 @@ body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-under::after{display:n
     <span class="wf-side is-a">Basic account creation</span>
     <input type="checkbox" id="wf-mode">
     <span class="wf-sw"></span>
-    <span class="wf-side is-b">Account creation via chamber invitation</span>
+    <span class="wf-side is-b">Account creation via chamber invitation<span class="wf-gate">contact.segwik_account_via_chamber_invite: true</span></span>
   </label>
 
   <span class="wf-rule"></span>
@@ -322,6 +363,7 @@ body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-under::after{display:n
       <div class="up-cur">Current plan: Start<span class="fx fx-note" data-field="customer/[customer_id]/subscription-state → package_id"><span class="fx-t">customer/[customer_id]/subscription-state → package_id</span></span></div>
     </div>
 
+    <div class="up-basic">
     <h2 class="up-h">Two ways to go from here</h2>
     <p class="up-sub">You&rsquo;re on the free-for-life Starter plan. It lives on your phone &mdash; desktop Segwik is a paid upgrade.</p>
 
@@ -333,9 +375,9 @@ body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-under::after{display:n
           <span class="up-plan-name">Segwik Start</span>
           <span class="up-badge">Free for life</span><span class="fx" data-field="package_title"><span class="fx-t">package_title</span></span>
         </div>
-        <p class="up-plan-desc">The Segwik Networking Core &mdash; every introduction, conversation and promise in one place.<span class="fx" data-field="popup_intro"><span class="fx-t">popup_intro</span></span></p>
+        <p class="up-plan-desc">The Segwik Networking Core &mdash; every introduction, conversation and promise in one place.<span class="fx" data-field="package.popup_intro"><span class="fx-t">package.popup_intro</span></span></p>
         <button class="up-cta" type="button" data-plan="start">
-          <i class="fa-solid fa-arrow-down-to-line"></i> Stay on Start &nbsp;&rarr;<span class="fx" data-field="popup_cta"><span class="fx-t">popup_cta</span></span>
+          <i class="fa-solid fa-arrow-down-to-line"></i> Stay on Start &nbsp;&rarr;<span class="fx" data-field="package.popup_cta"><span class="fx-t">package.popup_cta</span></span>
         </button>
       </div>
 
@@ -344,9 +386,9 @@ body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-under::after{display:n
           <span class="up-num">02</span>
           <span class="up-plan-name">Segwik Grow</span><span class="fx" data-field="package_title"><span class="fx-t">package_title</span></span>
         </div>
-        <p class="up-plan-desc">Unlocks Segwik on desktop &mdash; the full command center for people who run their network like a business.<span class="fx" style="--fw:96px" data-field="popup_intro"><span class="fx-t">popup_intro</span></span></p>
+        <p class="up-plan-desc">Unlocks Segwik on desktop &mdash; the full command center for people who run their network like a business.<span class="fx" style="--fw:96px" data-field="package.popup_intro"><span class="fx-t">package.popup_intro</span></span></p>
         <button class="up-cta" type="button" data-plan="grow">
-          <i class="fa-solid fa-paper-plane"></i> Upgrade to Grow &nbsp;&rarr;<span class="fx" data-field="popup_cta"><span class="fx-t">popup_cta</span></span>
+          <i class="fa-solid fa-paper-plane"></i> Upgrade to Grow &nbsp;&rarr;<span class="fx" data-field="package.popup_cta"><span class="fx-t">package.popup_cta</span></span>
         </button>
       </div>
 
@@ -355,17 +397,38 @@ body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-under::after{display:n
           <span class="up-num">03</span>
           <span class="up-plan-name">Segwik Pro</span><span class="fx" data-field="package_title"><span class="fx-t">package_title</span></span>
         </div>
-        <p class="up-plan-desc">Unlocks the tools needed to fully customize and scale your system.<span class="fx" data-field="popup_intro"><span class="fx-t">popup_intro</span></span></p>
+        <p class="up-plan-desc">Unlocks the tools needed to fully customize and scale your system.<span class="fx" data-field="package.popup_intro"><span class="fx-t">package.popup_intro</span></span></p>
         <button class="up-cta" type="button" data-plan="pro">
-          <i class="fa-solid fa-paper-plane"></i> Upgrade to Pro &nbsp;&rarr;<span class="fx" data-field="popup_cta"><span class="fx-t">popup_cta</span></span>
+          <i class="fa-solid fa-paper-plane"></i> Upgrade to Pro &nbsp;&rarr;<span class="fx" data-field="package.popup_cta"><span class="fx-t">package.popup_cta</span></span>
         </button>
       </div>
 
       <div class="up-note">
         <i class="fa-regular fa-calendar"></i>
-        <span><b>Not sure yet?</b> Book 20 minutes with Pete in the Success Center.<span class="fx fx-url" data-field="https://success-center.segwik.com/client-success-center?id=[customer_id]"><span class="fx-t">https://success-center.segwik.com/client-success-center?id=[customer_id]</span></span></span>
+        <span><b>Not sure yet?</b> Book 20 minutes with Pete in the Success Center.<span class="fx fx-url" data-field="redirect to https://success-center.segwik.com/client-success-center?id=[customer_id]"><span class="fx-t">redirect to https://success-center.segwik.com/client-success-center?id=[customer_id]</span></span></span>
       </div>
     </div>
+
+    </div><!-- /up-basic -->
+
+    <div class="up-chamber">
+      <h2 class="up-h">What Segwik does for a network</h2>
+      <p class="up-sub">A directory tells people who exists. Segwik gets them talking.</p>
+
+      <div class="up-band">
+        <div class="up-band-q">How many active members?</div>
+        <div class="up-band-pills" id="bandPills">
+          <button type="button" data-band="250" class="on">Up to 250</button>
+          <button type="button" data-band="1000">Up to 1,000</button>
+          <button type="button" data-band="2500">Up to 2,500</button>
+          <button type="button" data-band="plus">2,500+</button>
+        </div>
+        
+      </div>
+
+      <div class="up-plans" id="orgCards"></div>
+
+    </div><!-- /up-chamber -->
 
     <div class="up-foot">
       <div class="up-foot-left">
@@ -402,7 +465,7 @@ body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-under::after{display:n
         </div>
         <div class="dr-box-price">
           <span class="dr-price" id="drPrice"></span>
-          <span class="dr-per"><span id="drPer">per month</span><span class="fx fx-under" data-field="package_price"><span class="fx-t">package_price</span></span></span>
+          <span class="dr-per"><span id="drPer">per month</span><span class="fx fx-under" id="drPriceTag" data-field="package_price"><span class="fx-t">package_price</span></span></span>
         </div>
       </div>
 
@@ -411,9 +474,9 @@ body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-under::after{display:n
       <button class="dr-btn" type="button" id="drBtn"></button>
     </div>
 
-    <div class="dr-help">
+    <div class="dr-help" id="drHelp">
       <i class="fa-regular fa-calendar"></i>
-      <span><b>Want to see it first?</b> Book 20 minutes with Pete in the Success Center.<span class="fx fx-url" data-field="https://success-center.segwik.com/client-success-center?id=[customer_id]"><span class="fx-t">https://success-center.segwik.com/client-success-center?id=[customer_id]</span></span></span>
+      <span><b>Want to see it first?</b> Book 20 minutes with Pete in the Success Center.<span class="fx fx-url" data-field="redirect to https://success-center.segwik.com/client-success-center?id=[customer_id]"><span class="fx-t">redirect to https://success-center.segwik.com/client-success-center?id=[customer_id]</span></span></span>
     </div>
   </div>
 </aside>
@@ -423,6 +486,14 @@ body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-under::after{display:n
   'use strict';
 
   /* a zero-width marker that parks the field tag right after the text */
+  /* custom fields are namespaced by the record they live on; package_title,
+     product_title and the prices are native columns, so they stay bare */
+  var NATIVE = ['package_title', 'package_price', 'product_title', 'product_price'];
+  function fname(key, isOrg) {
+    if (NATIVE.indexOf(key) !== -1) { return key; }
+    return (isOrg ? 'product.' : 'package.') + key;
+  }
+
   function mark(el, field, w, first, edge) {
     var m = document.createElement('span');
     m.className = 'fx';
@@ -553,23 +624,182 @@ body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-under::after{display:n
     }
   };
 
+
+  /* ══════════ CHAMBER-INVITE MODE — the organization products ══════════
+     Products, not packages: the checkout carries prod=<id>. Prices and ids
+     come straight off the organization-pricing page, per member band. */
+  var BANDS = { '250': 'Up to 250 members', '1000': 'Up to 1,000 members',
+                '2500': 'Up to 2,500 members', 'plus': 'Over 2,500 members' };
+
+  var ORG = {
+    community: {
+      num: '01',
+      name: 'Segwik Community',
+      for: 'For chambers & associations',
+      intro: 'Activate the relationships inside your network. Keep your current back office.',
+      cta: 'Start with Network',
+      price: { '250': '$299', '1000': '$599', '2500': '$999', 'plus': 'Custom' },
+      ids:   { '250': 23447, '1000': 23448, '2500': 23449, 'plus': 23450 },
+      title: 'What Segwik Community does',
+      summary: 'Network intelligence across your member population, and the concierge that turns it into introductions.',
+      features: [
+        ['fas fa-brain', 'Network intelligence across your member population', 'Segwik reads the network so staff do not have to.'],
+        ['fas fa-user-tie', 'Network Concierge', 'Proactive "you should meet" recommendations.'],
+        ['fas fa-handshake', 'Introductions, scheduling and follow-through', 'From the suggestion to the meeting to what came of it.'],
+        ['fas fa-users-rectangle', 'Power Teams surfaced from the network itself', 'Built from how members actually refer.'],
+        ['fas fa-calendar-days', 'Relationship activity around your events', 'Who came, who connected, what followed.'],
+        ['fas fa-chart-line', 'Engagement visibility for staff and board', 'A real picture of how the network is doing.']
+      ]
+    },
+
+    signature: {
+      num: '02',
+      name: 'Segwik Signature Experiences',
+      for: 'For chambers running it all',
+      intro: 'Everything in Network, plus the member portal and the chamber\u2019s day-to-day operations.',
+      cta: 'Get Full Chamber',
+      price: { '250': '$499', '1000': '$799', '2500': '$1,299', 'plus': 'Custom' },
+      ids:   { '250': 23451, '1000': 23452, '2500': 23453, 'plus': 23454 },
+      title: 'Everything in Network, and',
+      summary: 'The member portal and the chamber\u2019s day-to-day operations, on top of everything Community does.',
+      features: [
+        ['fas fa-door-open', 'Member portal', 'A place of their own for every member.'],
+        ['fas fa-briefcase', 'Staff workspace for day-to-day operations', 'The work the chamber actually runs on.'],
+        ['fas fa-address-card', 'Member records, onboarding and renewals', 'The member lifecycle in one place.'],
+        ['fas fa-calendar-check', 'Deeper event administration', 'Beyond the invitation — the whole event.'],
+        ['fas fa-wpforms', 'Forms, communications and workflows', 'Collect, send and route without leaving Segwik.'],
+        ['fas fa-gauge-high', 'Operational dashboards and reporting', 'What staff and board need to see.']
+      ]
+    },
+
+    chapter: {
+      num: '03',
+      name: 'Network \u2014 Chapter',
+      for: 'For BNI, LeTip & referral chapters',
+      intro: 'BNI, LeTip and other weekly referral chapters.',
+      cta: 'Set up a chapter',
+      price: { '250': '$99', '1000': '$99', '2500': '$99', 'plus': '$99' },
+      ids:   { '250': 23455, '1000': 23455, '2500': 23455, 'plus': 23455 },
+      band: 'Any size chapter',
+      title: 'The full Network experience, chapter-sized',
+      summary: 'BNI, LeTip and other weekly referral chapters, with members keeping their own Segwik accounts.',
+      features: [
+        ['fas fa-right-left', 'Referrals and one-to-ones', 'With what came of them.'],
+        ['fas fa-user-plus', 'Visitors and guests brought in by members', 'Tracked from the invitation onward.'],
+        ['fas fa-repeat', 'The weekly meeting rhythm and follow-up', 'The cadence the chapter already runs.'],
+        ['fas fa-users-rectangle', 'Power Teams from how members actually refer', 'Not from a whiteboard exercise.'],
+        ['fas fa-id-card', 'Members keep their own Segwik accounts', 'The chapter does not own their network.']
+      ]
+    }
+  };
+
+
+  /* the one-time setup products, per member band. prod ids from the
+     organization-pricing page; chapter has no setup product of its own. */
+  var SETUP = {
+    community: {
+      name: 'Want us to set it up?',
+      desc: 'Members loaded and checked, the network tuned, your staff trained.',
+      price: { '250': '$500', '1000': '$999', '2500': '$1,999', 'plus': 'Quoted' },
+      ids:   { '250': 23456, '1000': 23457, '2500': 23458, 'plus': 23459 }
+    },
+    signature: {
+      name: 'Want us to set it up?',
+      desc: 'Members loaded and checked, the network tuned, your staff trained.',
+      price: { '250': '$2,999', '1000': '$4,999', '2500': '$7,999', 'plus': 'Quoted' },
+      ids:   { '250': 23460, '1000': 23461, '2500': 23462, 'plus': 23463 }
+    }
+  };
+
+  var band = '250';
+
+  function orgCards() {
+    var wrap = document.getElementById('orgCards');
+    if (!wrap) { return; }
+    while (wrap.firstChild) { wrap.removeChild(wrap.firstChild); }
+
+    ['community', 'signature', 'chapter'].forEach(function (key) {
+      var o = ORG[key];
+      var card = document.createElement('div');
+      card.className = 'up-plan';
+
+      var top = document.createElement('div');
+      top.className = 'up-plan-top';
+      /* one labelled thing per line, so no two chips ever land on the same row */
+      var nm = document.createElement('span');
+      nm.className = 'up-plan-name';
+      nm.textContent = o.name;
+      top.innerHTML = '<span class="up-num">' + o.num + '</span>';
+      top.appendChild(nm);
+      mark(nm, 'product_title', 96);
+      card.appendChild(top);
+
+      var aud = document.createElement('div');
+      aud.className = 'up-plan-for';
+      aud.textContent = o.for;
+      mark(aud, 'product.popup_audience', 96);
+      card.appendChild(aud);
+
+      var desc = document.createElement('p');
+      desc.className = 'up-plan-desc';
+      desc.textContent = o.intro;
+      mark(desc, 'product.popup_intro', 96);
+      card.appendChild(desc);
+
+      var btn = document.createElement('button');
+      btn.className = 'up-cta';
+      btn.type = 'button';
+      btn.setAttribute('data-plan', key);
+      btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ' + o.cta + ' &nbsp;&rarr;';
+      mark(btn, 'product.popup_cta', 96);
+      btn.addEventListener('click', function () { open(key); });
+      card.appendChild(btn);
+
+      wrap.appendChild(card);
+    });
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('#bandPills button'), function (b) {
+    b.addEventListener('click', function () {
+      Array.prototype.forEach.call(document.querySelectorAll('#bandPills button'), function (x) { x.classList.remove('on'); });
+      b.classList.add('on');
+      band = b.getAttribute('data-band');
+      orgCards();
+    });
+  });
+  orgCards();
+
   var dr = document.getElementById('dr');
   var back = document.getElementById('drBack');
   var feats = document.getElementById('drFeats');
   var bullets = document.getElementById('drBullets');
 
   function open(key) {
-    var p = PLANS[key];
+    /* one drawer serves both modes: plan packages, or organization products */
+    var org = ORG[key];
+    var p   = org ? {
+      title: org.title,
+      summary: org.summary,
+      features: org.features
+    } : PLANS[key];
     if (!p) { return; }
-    var box = BOX[p.box];
+
+    var box = org ? {
+      name: org.name,
+      sub: org.intro,
+      price: org.price[band],
+      per: org.price[band] === 'Custom' ? 'priced with the plan' : 'per month',
+      cta: org.cta,
+      bullets: org.features.map(function (f) { return f[1]; })
+    } : BOX[p.box];
 
     var elTitle = document.getElementById('drTitle');
     elTitle.textContent = p.title;
-    mark(elTitle, 'popup_drawer_heading', 92, false, true);
+    mark(elTitle, fname('popup_drawer_heading', !!org), 92, false, true);
 
     var elSum = document.getElementById('drSummary');
     elSum.textContent = p.summary;
-    mark(elSum, 'popup_drawer_summary', 96, false, true);
+    mark(elSum, fname('popup_drawer_summary', !!org), 96, false, true);
 
     while (feats.firstChild) { feats.removeChild(feats.firstChild); }
     p.features.forEach(function (f) {
@@ -590,18 +820,21 @@ body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-under::after{display:n
       desc.textContent = f[2];
       card.appendChild(desc);
 
-      if (!feats.childNodes.length) { mark(name, 'popup_drawer_features', 142, false, true); }
+      if (!feats.childNodes.length) { mark(name, fname('popup_drawer_features', !!org), 142, false, true); }
       feats.appendChild(card);
     });
 
-    mark(set('drBoxName', box.name), 'package_title', 96);
-    mark(set('drBoxSub', box.sub), 'popup_intro', 96);
+    mark(set('drBoxName', box.name), org ? 'product_title' : 'package_title', 96, false, true);
+    mark(set('drBoxSub', box.sub), fname('popup_intro', !!org), 96, false, true);
     document.getElementById('drPrice').textContent = box.price;
     document.getElementById('drPer').textContent = box.per;
+    var pTag = document.getElementById('drPriceTag');
+    pTag.setAttribute('data-field', org ? 'product_price' : 'package_price');
+    pTag.querySelector('.fx-t').textContent = org ? 'product_price' : 'package_price';
     var elBtn = document.getElementById('drBtn');
     elBtn.innerHTML = '';
     elBtn.appendChild(document.createTextNode(box.cta + '  →'));
-    mark(elBtn, 'popup_cta', 96, false, true);
+    mark(elBtn, fname('popup_cta', !!org), 96, false, true);
 
     while (bullets.firstChild) { bullets.removeChild(bullets.firstChild); }
     box.bullets.forEach(function (t, i) {
@@ -615,11 +848,40 @@ body:has(.wf-chk:checked):has(#wf-mode:not(:checked)) .fx-under::after{display:n
          inline — as a flex item it would add the row gap and shift the text */
       var txt = document.createElement('span');
       txt.textContent = t;
-      if (i === box.bullets.length - 1) { mark(txt, 'popup_bullets', 96, false, true); }
+      if (i === box.bullets.length - 1) { mark(txt, fname('popup_bullets', !!org), 96, false, true); }
       li.appendChild(txt);
 
       bullets.appendChild(li);
     });
+
+    /* close the drawer with the matching one-time setup product, where one exists */
+    var help = document.getElementById('drHelp');
+    var su = org ? SETUP[key] : null;
+    if (su) {
+      help.innerHTML = '';
+      var si = document.createElement('i');
+      si.className = 'fa-solid fa-screwdriver-wrench';
+      help.appendChild(si);
+      var sw = document.createElement('span');
+      var sb = document.createElement('b');
+      sb.textContent = su.name + ' ';
+      sw.appendChild(sb);
+      sw.appendChild(document.createTextNode(su.desc + ' '));
+      var sp = document.createElement('b');
+      sp.className = 'dr-setup-price';
+      sp.textContent = su.price[band] + (su.price[band] === 'Quoted' ? '' : ' one-time');
+      sw.appendChild(sp);
+      var stag = mark(sw, 'one-time setup product \u00b7 id ' + su.ids[band]
+        + ' \u2014 its product_title and product_price, one per member band').lastChild;
+      stag.className = 'fx fx-url';
+      help.appendChild(sw);
+    } else {
+      help.innerHTML = '<i class="fa-regular fa-calendar"></i>' +
+        '<span><b>Want to see it first?</b> Book 20 minutes with Pete in the Success Center.' +
+        '<span class="fx fx-url" data-field="url"><span class="fx-t">' +
+        'redirect to https://success-center.segwik.com/client-success-center?id=[customer_id]' +
+        '</span></span></span>';
+    }
 
     document.getElementById('drScroll').scrollTop = 0;
     dr.classList.add('on');
