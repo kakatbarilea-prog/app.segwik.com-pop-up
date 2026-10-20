@@ -871,8 +871,8 @@ body:has(.wf-chk:checked) .up{transform:translateX(-44px);}
       sp.className = 'dr-setup-price';
       sp.textContent = su.price[band] + (su.price[band] === 'Quoted' ? '' : ' one-time');
       sw.appendChild(sp);
-      var stag = mark(sw, 'one-time setup product \u00b7 id ' + su.ids[band]
-        + ' \u2014 its product_title and product_price, one per member band').lastChild;
+      var stag = mark(sw, 'price changes with the member count above \u2014 '
+        + 'each count is its own setup product, id ' + su.ids[band]).lastChild;
       stag.className = 'fx fx-url';
       help.appendChild(sw);
     } else {
